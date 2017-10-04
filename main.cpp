@@ -73,9 +73,7 @@ int Graph::operate(int val) {
         numbers[indexes[i]] = val;
     }
     std::vector<long long> localNumbers = numbers;
-    std::string localOperators;
-    for(int i = 0; i < operators.size(); i++)
-        localOperators.push_back(operators[i]);
+    std::string localOperators = operators;
     while(!localOperators.empty()) {
         int i = find(localOperators);
         char op = localOperators[i];
