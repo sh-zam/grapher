@@ -20,15 +20,15 @@ constexpr int randomval = 0;
 inline int find(const std::string&);
 
 class Graph {
-    std::vector<double> numbers;
+    std::vector<long double> numbers;
     std::string operators;
     std::vector<int> indexes;
-    double answer;
+    long double answer;
     inline void badoption() const;
 public:
     void getEquation();
-    int operate(int);
-    double getAnswer() const { return answer; }
+    long double operate(long double);
+    long double getAnswer() const { return answer; }
 };
 
 inline void Graph::badoption() const {
@@ -45,7 +45,7 @@ inline void Graph::badoption() const {
 void Graph::getEquation() {
     char tmp;
     char op;
-    int num;
+    long double num;
     if(cin >> num){
         numbers.push_back(num);
     }
@@ -62,17 +62,6 @@ void Graph::getEquation() {
             badoption();
     }
 
-    /*
-    cin >> tmp;
-    if(tmp == 'q')
-        return;
-    if(tmp == 'x') {     // if variable
-        indexes.push_back(0);
-        numbers.push_back(randomval);
-    }
-    else
-        numbers.push_back(tmp - 48);
-    */
     while(true) {
         cin >> op;
         if(op == 'q')
@@ -94,16 +83,7 @@ void Graph::getEquation() {
                 else {
                     badoption();
                 }
-
             }
-            /*cin >> tmp;
-            if(tmp == 'x') {
-                indexes.push_back(numbers.size());
-                numbers.push_back(randomval);
-            }
-            else
-                numbers.push_back(tmp - 48);
-                */
         }
         else {
                 badoption();
@@ -112,11 +92,11 @@ void Graph::getEquation() {
 }
 
 
-int Graph::operate(int val) {
+long double Graph::operate(long double val) {
     for(int i = 0; i < indexes.size(); ++i) {
         numbers[indexes[i]] = val;
     }
-    std::vector<double> localNumbers = numbers;
+    std::vector<long double> localNumbers = numbers;
     std::string localOperators = operators;
     while(!localOperators.empty()) {
         int i = find(localOperators);
@@ -163,13 +143,17 @@ int main(int argc, char *argv[])
   // create plot (from quadratic plot example):
   QVector<double> x, y;
   cout << "Enter the equation(q to exit): ";
-  Graph g;
-  g.getEquation();
+  Graph function;
+  function.getEquation();
 
-  for (double i=-10; i <= 10; i+= 1) {
+  for (double i=-10; i <= 10; i+= 0.01) {
     x.push_back(i);
-    y.push_back(g.operate(i));
+    y.push_back(function.operate(i));
   }
+  /*
+  for(int i = 0; i < y.size(); i++)
+      std::cout << "(" << x[i] << "," << y[i] << ")\n";
+      */
   customPlot.addGraph();
   customPlot.graph(0)->setData(x, y);
   customPlot.xAxis->setLabel("x");
