@@ -9,8 +9,6 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <stdexcept>
-#include <assert.h>
 
 using std::cin;     using std::cout;
 using std::endl;
@@ -80,9 +78,8 @@ void Graph::getEquation() {
                     indexes.push_back(numbers.size());
                     numbers.push_back(randomval);
                 }
-                else {
+                else
                     badoption();
-                }
             }
         }
         else {
@@ -99,7 +96,7 @@ long double Graph::operate(long double val) {
     std::vector<long double> localNumbers = numbers;
     std::string localOperators = operators;
     while(!localOperators.empty()) {
-        int i = find(localOperators);
+        int i = find(localOperators);	// give the operator's index in mathematical order
         char op = localOperators[i];
         if (op == '^')
             localNumbers[i] = std::pow(localNumbers[i], localNumbers[i + 1]);
@@ -120,6 +117,7 @@ long double Graph::operate(long double val) {
 }
 
 inline int find(const std::string &operators) {
+    // FIXME is there an better, efficient way?
     for(int i = operators.size()-1; i >= 0; i--)
         if(operators[i] == '^')
             return i;
@@ -146,25 +144,20 @@ int main(int argc, char *argv[])
   Graph function;
   function.getEquation();
 
-  for (double i=-10; i <= 10; i+= 0.01) {
+  for (double i=-100; i <= 100; i+= 0.01) {
     x.push_back(i);
     y.push_back(function.operate(i));
   }
-  /*
-  for(int i = 0; i < y.size(); i++)
-      std::cout << "(" << x[i] << "," << y[i] << ")\n";
-      */
+
   customPlot.addGraph();
   customPlot.graph(0)->setData(x, y);
   customPlot.xAxis->setLabel("x");
   customPlot.yAxis->setLabel("f(x)");
   customPlot.xAxis->setTickLength(0, 5);
   customPlot.xAxis->setSubTickLength(0, 3);
-//  customPlot.xAxis->setRange(-10, 100);
   customPlot.rescaleAxes();
-//  customPlot.replot();
 
-  window.setGeometry(100, 100, 500, 400);
+  window.setGeometry(100, 100, 900, 700);
   window.show();
   return a.exec();
 }
