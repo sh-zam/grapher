@@ -13,21 +13,28 @@
 using std::cin;     using std::cout;
 using std::endl;	using std::cerr;
 
-constexpr int randomval = 0;
+constexpr long double randomval = 0;
 constexpr int DIV_BY_ZERO = -1;
 
 //inline int find(const std::string&);
-inline int find(const std::string&, int, int);
+int find(const std::string&, int = 0, int = 0);
 
 class Graph {
     std::vector<long double> numbers;
     std::string operators;
+    std::string localOperators;
+    std::vector<long double> localNumbers;
+    std::vector<long double> tempNumbers;
+    std::string tempOperators;
     std::vector<int> indexes;
+    std::vector<unsigned int> popen_indexes;
+    std::vector<unsigned int> pclose_indexes;
+    std::vector<unsigned int> tmp_open_indexes;
+    std::vector<unsigned int> tmp_close_indexes;
     long double answer;
     inline void badoption() const;
     long double parenthesis(int, long double);
-    std::string localOperators;
-    std::vector<long double> localNumbers;
+
 public:
     void getEquation();
     long double operate(long double);
@@ -53,16 +60,24 @@ void Graph::getEquation() {
     char tmp;
     char op;
     long double num;
-    if(cin >> num){
+    if(cin >> num) {
         numbers.push_back(num);
     }
     else {
         cin.clear();
         cin >> tmp;
-        if(tmp == 'q')
+        if(tmp == 'q') {
             return;
+        }
         if(tmp == '(' || tmp == ')') {
-            operators.push_back(tmp);
+            if(tmp == '(') {
+                popen_indexes.push_back(operators.size());
+                operators.push_back(tmp);
+            }
+            else {
+                pclose_indexes.push_back(operators.size());
+                operators.push_back(tmp);
+            }
             if(cin >> num)
                 numbers.push_back(num);
             else {
@@ -78,8 +93,9 @@ void Graph::getEquation() {
             indexes.push_back(numbers.size());
             numbers.push_back(randomval);
         }
-        else
+        else {
             badoption();
+        }
     }
 
     while(true) {
@@ -87,7 +103,14 @@ void Graph::getEquation() {
         if(op == 'q')
             break;
         if( op == '(' || op == ')') {
-            operators.push_back(op);
+            if(op == '(') {
+                popen_indexes.push_back(operators.size());
+                operators.push_back(op);
+            }
+            else {
+                pclose_indexes.push_back(operators.size());
+                operators.push_back(op);
+            }
         }
         else if(op == '+' || op == '*' || op == '-' || op == '/' || op == '^') {
             operators.push_back(op);
@@ -103,52 +126,91 @@ void Graph::getEquation() {
                     indexes.push_back(numbers.size());
                     numbers.push_back(randomval);
                 }
-                else
+                else if(tmp == '(' || tmp == ')') {
+                    if(tmp == '(') {
+                        popen_indexes.push_back(operators.size());
+                        operators.push_back(tmp);
+                    }
+                    else {
+                        pclose_indexes.push_back(operators.size());
+                        operators.push_back(tmp);
+                    }
+                    if(cin >> num)
+                        numbers.push_back(num);
+                    else {
+                        cin.clear();
+                        cin >> tmp;
+                        if(tmp == 'x') {
+                            indexes.push_back(numbers.size());
+                            numbers.push_back(randomval);
+                        }
+                    }
+                }
+                else {
                     badoption();
+                }
             }
         }
         else {
-                badoption();
+            badoption();
         }
     }
 }
 
 long double Graph::parenthesis(int index, long double val) {
-    for(int i = index; i < operators.size(); ++i) {
-        if(operators[i] == ')'){
-            return operate(index, i, val);
-        }
+    for(int i = tmp_open_indexes[index]; i < tmp_close_indexes[index]; ++i) {  // this is very well thought
+        tempNumbers.push_back(localNumbers[i]);
     }
+
+    for(int i = tmp_open_indexes[index]+1; i < tmp_close_indexes[index]; ++i) {
+        tempOperators.push_back(localOperators[i]);
+    }
+    return operate(tmp_open_indexes[index], tmp_close_indexes[index], val);
 }
 
 long double Graph::operate(long double val) {
     for(int i = 0; i < indexes.size(); ++i) {
         numbers[indexes[i]] = val;
     }
+    long double parvalue;
+    tmp_open_indexes = popen_indexes;
+    tmp_close_indexes = pclose_indexes;
     localNumbers = numbers;
     localOperators = operators;
-    while(!localOperators.empty()) {
-        int i = find(localOperators, 0, 0);	// give the operator's index in mathematical order
-        char op = localOperators[i];
-        if(op == '(') {
-            parenthesis(i, val);
-            // this code is making me fucking numb-nuts!!
-            continue;
+    // Resolve parenthesis
+    for(int i = 0, number = 0; i < operators.size(); ++i) {
+        if(operators[i] == '(') {
+            parvalue = parenthesis(number, val);
+
+            localNumbers.erase(localNumbers.begin()+tmp_open_indexes[number]+1, localNumbers.begin()+tmp_close_indexes[number]);
+            localNumbers[tmp_open_indexes[number]] = parvalue;
+            unsigned int length = tmp_close_indexes[number] - tmp_open_indexes[number] + 1;
+            localOperators.erase(tmp_open_indexes[number], length);
+            number++;
+            for(int i = number; i < tmp_close_indexes.size(); i++) {
+                tmp_open_indexes[i]  -= length;
+                tmp_close_indexes[i] -= length;
+            }
+            // TOUGH PART!
         }
+    }
+    // solve the equation out of parenthesis
+    while(!localOperators.empty()) {
+        int i = find(localOperators);    // give the operator's index in mathematical order
+        char op = localOperators[i];
         if (op == '^')
             localNumbers[i] = std::pow(localNumbers[i], localNumbers[i + 1]);
         else if (op == '/') {
             try {
-                if(localNumbers[i+1] == 0)
+                if (localNumbers[i + 1] == 0)
                     throw DIV_BY_ZERO;
                 localNumbers[i] /= localNumbers[i + 1];
             }
-            catch(int) {
+            catch (int) {
                 cerr << "Divide by zero" << endl;
                 return 0;
             }
-        }
-        else if (op == '*')
+        } else if (op == '*')
             localNumbers[i] *= localNumbers[i + 1];
         else if (op == '+')
             localNumbers[i] += localNumbers[i + 1];
@@ -158,7 +220,9 @@ long double Graph::operate(long double val) {
         localNumbers.erase(localNumbers.begin() + i + 1);
         localOperators.erase(localOperators.begin() + i);
     }
-    return answer = localNumbers[0];
+    answer = localNumbers[0];
+    localNumbers.erase(localNumbers.begin());
+    return answer;
 }
 
 
@@ -167,23 +231,21 @@ long double Graph::operate(int start, int end, long double val) {
     for(int i = start; i < indexes.size() && i < end; i++)
         numbers[indexes[i]] = val;
 
-    localNumbers = numbers;
-    localOperators = operators;
-    while(!localOperators.empty()) {
-        int i = find(localOperators, start, end);
-        // experimental
-        localOperators.erase(localOperators.begin()+end);
-        localOperators.erase(localOperators.begin()+start);
-        if(localOperators.size() == 0)
-            return answer = localNumbers[0];
-        char op = localOperators[i];
+    while(!tempOperators.empty()) {
+        int i = find(tempOperators);
+        if(tempOperators.size() == 0) {
+            answer = tempNumbers[0];
+            tempNumbers.pop_back();
+            return answer;
+        }
+        char op = tempOperators[i];
         if(op == '^')
-            localNumbers[i] = std::pow(localNumbers[i], localNumbers[i+1]);
+            tempNumbers[i] = std::pow(tempNumbers[i], tempNumbers[i+1]);
         else if (op == '/') {
             try {
-                if(localNumbers[i+1] == 0)
+                if(tempNumbers[i+1] == 0)
                     throw DIV_BY_ZERO;
-                localNumbers[i] /= localNumbers[i + 1];
+                tempNumbers[i] /= tempNumbers[i + 1];
             }
             catch(int) {
                 cerr << "Divide by zero" << endl;
@@ -191,20 +253,22 @@ long double Graph::operate(int start, int end, long double val) {
             }
         }
         else if (op == '*')
-            localNumbers[i] *= localNumbers[i + 1];
+            tempNumbers[i] *= tempNumbers[i + 1];
         else if (op == '+')
-            localNumbers[i] += localNumbers[i + 1];
+            tempNumbers[i] += tempNumbers[i + 1];
         else if (op == '-')
-            localNumbers[i] -= localNumbers[i + 1];
+            tempNumbers[i] -= tempNumbers[i + 1];
 
-        localNumbers.erase(localNumbers.begin() + i + 1);
-        localOperators.erase(localOperators.begin() + i);
+        tempNumbers.erase(tempNumbers.begin() + i + 1);
+        tempOperators.erase(tempOperators.begin() + i);
     }
-    return answer = localOperators[0];
+    answer = tempNumbers[0];
+    tempNumbers.pop_back();
+    return answer;
 }
 
 
-inline int find(const std::string &operators, int start = 0, int end = 0) {
+int find(const std::string &operators, int start, int end) {
     // FIXME is there an better, efficient way?
     if(!end)	// if end is zero
         end = operators.size()-1;
@@ -221,7 +285,6 @@ inline int find(const std::string &operators, int start = 0, int end = 0) {
     for(int i = start; i <= end; i++)
         if(operators[i] == '+' || operators[i] == '-')
             return i;
-    return -1;
 }
 
 
