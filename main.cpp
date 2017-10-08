@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
   Graph function;
   function.getEquation();
 
-  for (double i=-100; i <= 100; i+= 0.01) {
+  for (double i=-1000; i <= 1000; i+= 0.01) {
     x.push_back(i);
     y.push_back(function.operate(i));
   }
@@ -314,6 +314,8 @@ int main(int argc, char *argv[])
   customPlot.yAxis->setLabel("f(x)");
   customPlot.xAxis->setTickLength(0, 5);
   customPlot.xAxis->setSubTickLength(0, 3);
+  customPlot.setInteraction(QCP::iRangeDrag, true);
+  customPlot.setInteraction(QCP::iRangeZoom, true);
   customPlot.rescaleAxes();
 
   window.setGeometry(100, 100, 900, 700);
