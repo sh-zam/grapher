@@ -1,6 +1,5 @@
 /*
  * Created by sh_z on 10/2/17
- * This is very bad implementation of OOP concept
  */
 
 #include <QApplication>
@@ -17,7 +16,8 @@ constexpr long double randomval = 0;
 constexpr int DIV_BY_ZERO = -1;
 
 //inline int find(const std::string&);
-int find(const std::string&, int = 0, int = 0);
+inline int find(const std::string&, int = 0, int = 0);
+
 
 class Graph {
     std::vector<long double> numbers;
@@ -33,7 +33,7 @@ class Graph {
     std::vector<unsigned int> tmp_close_indexes;
     long double answer;
     inline void badoption() const;
-    long double parenthesis(int, long double);
+    inline long double parenthesis(int, long double);
 
 public:
     void getEquation();
@@ -157,16 +157,17 @@ void Graph::getEquation() {
     }
 }
 
-long double Graph::parenthesis(int index, long double val) {
+
+inline long double Graph::parenthesis(int index, long double val) {
     for(int i = tmp_open_indexes[index]; i < tmp_close_indexes[index]; ++i) {  // this is very well thought
         tempNumbers.push_back(localNumbers[i]);
     }
-
     for(int i = tmp_open_indexes[index]+1; i < tmp_close_indexes[index]; ++i) {
         tempOperators.push_back(localOperators[i]);
     }
     return operate(tmp_open_indexes[index], tmp_close_indexes[index], val);
 }
+
 
 long double Graph::operate(long double val) {
     for(int i = 0; i < indexes.size(); ++i) {
@@ -210,12 +211,15 @@ long double Graph::operate(long double val) {
                 cerr << "Divide by zero" << endl;
                 return 0;
             }
-        } else if (op == '*')
+        } else if (op == '*') {
             localNumbers[i] *= localNumbers[i + 1];
-        else if (op == '+')
+        }
+        else if (op == '+') {
             localNumbers[i] += localNumbers[i + 1];
-        else if (op == '-')
+        }
+        else if (op == '-') {
             localNumbers[i] -= localNumbers[i + 1];
+        }
 
         localNumbers.erase(localNumbers.begin() + i + 1);
         localOperators.erase(localOperators.begin() + i);
@@ -252,12 +256,15 @@ long double Graph::operate(int start, int end, long double val) {
                 return 0;
             }
         }
-        else if (op == '*')
+        else if (op == '*') {
             tempNumbers[i] *= tempNumbers[i + 1];
-        else if (op == '+')
+        }
+        else if (op == '+') {
             tempNumbers[i] += tempNumbers[i + 1];
-        else if (op == '-')
+        }
+        else if (op == '-') {
             tempNumbers[i] -= tempNumbers[i + 1];
+        }
 
         tempNumbers.erase(tempNumbers.begin() + i + 1);
         tempOperators.erase(tempOperators.begin() + i);
@@ -268,7 +275,7 @@ long double Graph::operate(int start, int end, long double val) {
 }
 
 
-int find(const std::string &operators, int start, int end) {
+inline int find(const std::string &operators, int start, int end) {
     // FIXME is there an better, efficient way?
     if(!end)	// if end is zero
         end = operators.size()-1;
